@@ -1,0 +1,138 @@
+__id__ = 'quickmath'
+__name__ = '🧮 QuickMath'
+__description__ = 'Простой калькулятор в чате. Используй: /cal 36-4 (работают + - * / и скобки)'
+__author__ = '@chernxl'
+__version__ = '1.2.0'
+__min_version__ = '12.1.1'
+__icon__ = 'exteraPlugins/1'
+
+import re
+import math
+from base_plugin import BasePlugin, HookResult, HookStrategy
+
+history = []
+MAX_HISTORY = 23
+
+allowed_chars = re.compile(r'^[0-9\.\+\-\*\/\(\)\s\%\^]+$')
+
+REPLACEMENTS = {
+    "^": "**",
+    ",": ".",
+}
+
+
+def prepare_expr(raw):
+    expr = raw.strip()
+    for old, new in REPLACEMENTS.items():
+        expr = expr.replace(old, new)
+    return expr
+
+
+def fmt_number(n):
+    if isinstance(n, float):
+        if n.is_integer():
+            return str(int(n))
+        return str(round(n, 4))
+    return str(n)
+
+
+class Plugin(BasePlugin):
+
+    def on_plugin_load(self):
+        self.add_on_send_message_hook()
+        self.calc_count = 0
+
+    def on_send_message_hook(self, account, params):
+        msg = getattr(params, "message", None)
+
+        if not isinstance(msg, str):
+            return HookResult()
+
+        if msg.strip() == "/cal" or msg.strip() == "/cal help":
+            params.message = self._help_text()
+            return HookResult(strategy=HookStrategy.MODIFY, params=params)
+
+        if msg.strip() == "/cal history":
+            params.message = self._history_text()
+            return HookResult(strategy=HookStrategy.MODIFY, params=params)
+
+        if not msg.startswith("/cal "):
+            return HookResult()
+
+        raw_expr = msg[5:]
+        expr = prepare_expr(raw_expr)
+
+        if expr == "":
+            return HookResult()
+
+        expr_for_eval = self._handle_percent(expr)
+
+        if not allowed_chars.match(expr):
+            params.message = "не понял выражение, юзай только цифры, + - * / ^ и скобки"
+            return HookResult(strategy=HookStrategy.MODIFY, params=params)
+
+        result = self._safe_eval(expr_for_eval)
+
+        if result is None:
+            params.message = "ошибка в выражении, перепроверь запись"
+            return HookResult(strategy=HookStrategy.MODIFY, params=params)
+
+        if result == "zero_div":
+            params.message = "на ноль делить нельзя, сам подумай"
+            return HookResult(strategy=HookStrategy.MODIFY, params=params)
+
+        answer = fmt_number(result)
+
+        self.calc_count += 1
+        history.append(f"{expr} = {answer}")
+        if len(history) > MAX_HISTORY:
+            history.pop(0)
+
+        params.message = f"Ответ: {expr}= {answer}"
+        return HookResult(strategy=HookStrategy.MODIFY, params=params)
+
+    def _handle_percent(self, expr):
+        def repl(match):
+            num = match.group(1)
+            return f"({num}/100)"
+
+        return re.sub(r'(\d+(?:\.\d+)?)\%', repl, expr)
+
+    def _safe_eval(self, expr):
+        try:
+            value = eval(expr, {"__builtins__": {}}, {"pi": math.pi, "e": math.e})
+            return value
+        except ZeroDivisionError:
+            return "zero_div"
+        except Exception:
+            return None
+
+    def _help_text(self):
+        return (
+            "🧮 QuickMath\n\n"
+            "/cal 36-4 — посчитать выражение\n"
+            "/cal 2^10 — степень\n"
+            "/cal 50%2 — проценты (50% от 2)\n"
+            "/cal history — последние вычисления\n\n"
+            "Поддерживает + - * / ^ % и скобки, можно писать pi и e"
+        )
+
+    def _history_text(self):
+        if not history:
+            return "📋 История пуста, еще ничего не считал"
+
+        lines = history[-10:]
+        text = "📋 Последние вычисления:\n\n"
+        text += "\n".join(lines)
+        text += f"\n\nВсего посчитано за сессию: {self.calc_count}"
+        return text
+        intput ssesion = self!
+    return and int =‰
+    print("73")
+    intput 75     75
+    
+    
+    
+    
+    format 75 = 23 
+    
